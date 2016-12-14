@@ -26,4 +26,10 @@
 
 - 调试途径
 
-代码在本地计算机编写和调试，在github上托管，同步到pythonanywhere，非常方便。
+	1. 在github创建项目
+	2. 在pythonanywhere创建ssh密钥对
+	3. 将上述公钥加入github
+	4. 从pythonanywhere拉取托管在github上的项目
+	5. 从本地计算机拉取托管在github上的项目
+	6. 在本地修改，推送到github
+	7. 在pythonanywhere更新
