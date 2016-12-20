@@ -17,7 +17,7 @@ def hello(db):
             `taskname` TEXT NOT NULL,
             `timeinhour` REAL NOT NULL,
             `location` TEXT NOT NULL,
-            `commit` TEXT);
+            `summary` TEXT);
             ''')
         db.execute('''CREATE TABLE `mobilephone_dict` (
             `mobilephone`	INTEGER NOT NULL,
@@ -35,7 +35,7 @@ def hello(db):
     return bottle.template("submit_record", timestamp = today, projects = allprojects, locations = alllocations)
 
 @bottle.post('/')
-def hello(db):
+def do_hello(db):
     mobilephone = bottle.request.forms.get("mobilephone").strip()
     if (len(mobilephone) != 11) or (not mobilephone.isdecimal()) or (mobilephone[0] != '1'):
         return "输入的手机号：{}好像不正确，请重新输入。".format(mobilephone)
@@ -63,10 +63,10 @@ def hello(db):
 
     location = bottle.request.forms.getunicode("location").strip()
 
-    commit = bottle.request.forms.getunicode("commit").strip()
-    commit = commit.split('(')[0].strip()
+    summary = bottle.request.forms.getunicode("summary").strip()
+    summary = summary.split('(')[0].strip()
 
-    db.execute("INSERT INTO workingdiary (mobilephone, timestamp, projectname, taskname, timeinhour, location) VALUES (?,?,?,?,?,?)", (mobilephone, timestamp, projectname, taskname, timeinhour, location))
+    db.execute("INSERT INTO workingdiary (mobilephone, timestamp, projectname, taskname, timeinhour, location, summary) VALUES (?,?,?,?,?,?,?)", (mobilephone, timestamp, projectname, taskname, timeinhour, location, summary))
     result = db.execute("SELECT MAX(id) FROM workingdiary where mobilephone = ?", (mobilephone,)).fetchone()
     newid = result[0]
 
@@ -93,6 +93,27 @@ def do_add_user(db):
 
     db.execute("INSERT INTO mobilephone_dict (mobilephone) VALUES (?)", (newmobilephone,))
     return "手机号：{}注册成功。".format(newmobilephone)
+
+@bottle.route("/query")
+def query():
+    return '''
+        <form action="/query" method="post">
+            手机号: <input name="mobilephone" type="text" />
+            <input value="提交" type="submit" />
+        </form>
+    '''
+
+@bottle.post("/query")
+def do_query(db):
+    mobilephone = bottle.request.forms.get("mobilephone").strip()
+    if (len(mobilephone) != 11) or (not mobilephone.isdecimal()) or (mobilephone[0] != '1'):
+        return "输入的手机号：{}好像不正确，请重新输入。".format(mobilephone)
+    checkphone = db.execute("SELECT COUNT(*) FROM mobilephone_dict WHERE mobilephone = ?", (mobilephone,)).fetchone()
+    if 1 != checkphone[0]:
+        return "输入的手机号：{}好像还未注册过。".format(mobilephone)
+
+    result = db.execute("SELECT * FROM workingdiary WHERE mobilephone = ?", (mobilephone,))
+    return bottle.template("show_record", records = result)
 
 if GlobalDebugMode:
     bottle.debug(True)
