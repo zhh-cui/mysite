@@ -110,7 +110,7 @@ def do_query(db):
     if 1 != checkphone[0]:
         return "输入的手机号：{}好像还未注册过。".format(mobilephone)
 
-    result = db.execute("SELECT * FROM workingdiary WHERE mobilephone = ?", (mobilephone,))
+    result = db.execute("SELECT * FROM workingdiary WHERE mobilephone = ? order by date(timestamp) desc", (mobilephone,))
     return bottle.template("show_record", records = result)
 
 @bottle.route("/edit/<id:int>")
