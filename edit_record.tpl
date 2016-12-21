@@ -6,7 +6,7 @@
 </tr>
 <tr>
     <td width="100">手机号：</td>
-    <td><input name="mobilephone" type="text" value="{{record[1]}}" style="width:400px;" /></td>
+    <td><input name="mobilephone" type="text" value="{{record[1]}}" style="width:400px;" readonly="readonly" /></td>
 </tr>
 <tr>
     <td width="100">日期：</td>
