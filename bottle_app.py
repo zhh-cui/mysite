@@ -133,7 +133,7 @@ def do_hello(db):
         code.update(password.encode())
         value = code.hexdigest()
 
-        db.execute("INSERT INTO mobilephone_dict (mobilephone, password) VALUES (?, value)", (mobilephone, value))
+        db.execute("INSERT INTO mobilephone_dict (mobilephone, password) VALUES (?, ?)", (mobilephone, value))
         return "手机号：{}注册成功。".format(mobilephone)
 
 @bottle.route("/edit/<id:int>")
