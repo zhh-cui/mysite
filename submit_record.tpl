@@ -13,9 +13,9 @@
 </tr>
 <tr>
     <td width="100">现有项目：</td>
-    <td colspan=4><table border=1>
-%for item in projects:
-        <tr><td>{{item}}</td></tr>
+    <td colspan=4><table>
+%for id, item in enumerate(projects):
+        <tr><td>{{id+1}}. {{item}}</td></tr>
 %end
     </table></td>
 </tr>
@@ -33,9 +33,9 @@
 </tr>
 <tr>
     <td width="100">现有地点：</td>
-    <td colspan=4><table border=1>
-%for item in locations:
-        <tr><td>{{item}}</td></tr>
+    <td colspan=4><table>
+%for id, item in enumerate(locations):
+        <tr><td>{{id+1}}. {{item}}</td></tr>
 %end
     </table></td>
 </tr>

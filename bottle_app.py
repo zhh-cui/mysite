@@ -19,16 +19,16 @@ def hello(db):
             ''')
         db.execute('''CREATE TABLE `mobilephone_dict` (
             `mobilephone` INTEGER NOT NULL,
-            `password` TEXT NOT NULL,
+            `password` TEXT,
             PRIMARY KEY(mobilephone));
             ''')
 
     today = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d")
 
-    result = db.execute("SELECT DISTINCT projectname FROM workingdiary;").fetchall()
+    result = db.execute("SELECT DISTINCT projectname FROM workingdiary order by projectname asc;").fetchall()
     allprojects = [item[0] for item in result]
 
-    result = db.execute("SELECT DISTINCT location FROM workingdiary;").fetchall()
+    result = db.execute("SELECT DISTINCT location FROM workingdiary order by location asc;").fetchall()
     alllocations = [item[0] for item in result]
 
     return bottle.template("submit_record", timestamp = today, projects = allprojects, locations = alllocations)
@@ -49,9 +49,22 @@ def do_hello(db):
         except ValueError:
             return "输入的日期：{}好像不正确。".format(timestamp)
 
+        result = db.execute("SELECT DISTINCT projectname FROM workingdiary order by projectname asc;").fetchall()
+        allprojects = [item[0] for item in result]
+
         projectname = bottle.request.forms.getunicode("projectname").strip()
+        if len(projectname):
+            if projectname.isdecimal():
+                if (int(projectname) > 0) and (int(projectname) <= len(allprojects)):
+                    projectname = allprojects[int(projectname) - 1]
+                else:
+                    return "输入的项目名称：{}好像不正确。".format(projectname)
+        else:
+            return "输入的项目名称：{}好像不正确。".format(projectname)
 
         taskname = bottle.request.forms.getunicode("taskname").strip()
+        if not len(taskname):
+            return "输入的任务名称不能为空。"
 
         timeinhour = bottle.request.forms.get("timeinhour").strip()
         try:
@@ -61,7 +74,18 @@ def do_hello(db):
         if timeinhour % 0.5:
             return "输入的耗费时间：{}好像不正确。".format(timeinhour)
 
+        result = db.execute("SELECT DISTINCT location FROM workingdiary order by location asc;").fetchall()
+        alllocations = [item[0] for item in result]
+
         location = bottle.request.forms.getunicode("location").strip()
+        if len(location):
+            if location.isdecimal():
+                if (int(location) > 0) and (int(location) <= len(alllocations)):
+                    location = alllocations[int(location) - 1]
+                else:
+                    return "输入的地点：{}好像不正确。".format(location)
+        else:
+            return "输入的地点：{}好像不正确。".format(location)
 
         summary = bottle.request.forms.getunicode("summary").strip()
         summary = summary.split('(')[0].strip()
@@ -114,13 +138,16 @@ def do_hello(db):
 
 @bottle.route("/edit/<id:int>")
 def edit(id, db):
-    result = db.execute("SELECT DISTINCT projectname FROM workingdiary;").fetchall()
+    result = db.execute("SELECT DISTINCT projectname FROM workingdiary order by projectname asc;").fetchall()
     allprojects = [item[0] for item in result]
 
-    result = db.execute("SELECT DISTINCT location FROM workingdiary;").fetchall()
+    result = db.execute("SELECT DISTINCT location FROM workingdiary order by location asc;").fetchall()
     alllocations = [item[0] for item in result]
 
     result = db.execute("SELECT * FROM workingdiary where id = ?", (id,)).fetchone()
+    if type(result) == type(None):
+        return "非法查询。".format(id)
+
     return bottle.template("edit_record", record = result, projects = allprojects, locations = alllocations)
 
 @bottle.post("/edit/<id:int>")
@@ -148,9 +175,22 @@ def do_edit(id, db):
         except ValueError:
             return "输入的日期：{}好像不正确。".format(timestamp)
 
+        result = db.execute("SELECT DISTINCT projectname FROM workingdiary order by projectname asc;").fetchall()
+        allprojects = [item[0] for item in result]
+
         projectname = bottle.request.forms.getunicode("projectname").strip()
+        if len(projectname):
+            if projectname.isdecimal():
+                if (int(projectname) > 0) and (int(projectname) <= len(allprojects)):
+                    projectname = allprojects[int(projectname) - 1]
+                else:
+                    return "输入的项目名称：{}好像不正确。".format(projectname)
+        else:
+            return "输入的项目名称：{}好像不正确。".format(projectname)
 
         taskname = bottle.request.forms.getunicode("taskname").strip()
+        if not len(taskname):
+            return "输入的任务名称不能为空。"
 
         timeinhour = bottle.request.forms.get("timeinhour").strip()
         try:
@@ -160,7 +200,18 @@ def do_edit(id, db):
         if timeinhour % 0.5:
             return "输入的耗费时间：{}好像不正确。".format(timeinhour)
 
+        result = db.execute("SELECT DISTINCT location FROM workingdiary order by location asc;").fetchall()
+        alllocations = [item[0] for item in result]
+
         location = bottle.request.forms.getunicode("location").strip()
+        if len(location):
+            if location.isdecimal():
+                if (int(location) > 0) and (int(location) <= len(alllocations)):
+                    location = alllocations[int(location) - 1]
+                else:
+                    return "输入的地点：{}好像不正确。".format(location)
+        else:
+            return "输入的地点：{}好像不正确。".format(location)
 
         summary = bottle.request.forms.getunicode("summary").strip()
         summary = summary.split('(')[0].strip()
