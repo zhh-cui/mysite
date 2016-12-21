@@ -49,6 +49,7 @@
     <td><textarea name="summary" type="text" value="" style="width:400px;height:100px;">{{record[7]}}</textarea></td>
 </tr>
 </table>
+密码：<input name="password" value="" type="password" style="width:150px" />
 <input name="save" value="提交" type="submit" />
 <input name="delete" value="删除" type="submit" />
 </form>

@@ -1,4 +1,4 @@
-import os, datetime, bottle, bottle_sqlite
+import os, hashlib, datetime, bottle, bottle_sqlite
 
 dbfilepath = os.path.join(os.path.split(os.path.realpath(__file__))[0], 'workingdiary.db')
 bottle.install(bottle_sqlite.SQLitePlugin(dbfile = dbfilepath))
@@ -18,7 +18,8 @@ def hello(db):
             `summary` TEXT);
             ''')
         db.execute('''CREATE TABLE `mobilephone_dict` (
-            `mobilephone`	INTEGER NOT NULL,
+            `mobilephone` INTEGER NOT NULL,
+            `password` TEXT NOT NULL,
             PRIMARY KEY(mobilephone));
             ''')
 
@@ -79,6 +80,15 @@ def do_hello(db):
         if 1 != checkphone[0]:
             return "输入的手机号：{}好像还未注册过。".format(mobilephone)
 
+        password = bottle.request.forms.get("password").strip()
+        code = hashlib.md5()
+        code.update(password.encode())
+        value = code.hexdigest()
+
+        check = db.execute("SELECT password FROM mobilephone_dict WHERE mobilephone = ?", (mobilephone,)).fetchone()
+        if value != check[0]:
+            return "输入的手机号：{}好像与密码不匹配。".format(mobilephone)
+
         result = db.execute("SELECT * FROM workingdiary WHERE mobilephone = ? order by date(timestamp) desc", (mobilephone,))
         return bottle.template("show_record", records = result)
 
@@ -91,7 +101,15 @@ def do_hello(db):
         if (len(mobilephone) != 11) or (not mobilephone.isdecimal()) or (mobilephone[0] != '1'):
             return "输入的手机号：{}好像不正确，请重新输入。".format(mobilephone)
 
-        db.execute("INSERT INTO mobilephone_dict (mobilephone) VALUES (?)", (mobilephone,))
+        password = bottle.request.forms.get("password").strip()
+        if len(password) < 4:
+            return "输入的密码太短，应该大于4位。"
+
+        code = hashlib.md5()
+        code.update(password.encode())
+        value = code.hexdigest()
+
+        db.execute("INSERT INTO mobilephone_dict (mobilephone, password) VALUES (?, value)", (mobilephone, value))
         return "手机号：{}注册成功。".format(mobilephone)
 
 @bottle.route("/edit/<id:int>")
@@ -107,14 +125,23 @@ def edit(id, db):
 
 @bottle.post("/edit/<id:int>")
 def do_edit(id, db):
-    if bottle.request.forms.get("save", "").strip():
-        mobilephone = bottle.request.forms.get("mobilephone").strip()
-        if (len(mobilephone) != 11) or (not mobilephone.isdecimal()) or (mobilephone[0] != '1'):
-            return "输入的手机号：{}好像不正确，请重新输入。".format(mobilephone)
-        checkphone = db.execute("SELECT COUNT(*) FROM mobilephone_dict WHERE mobilephone = ?", (mobilephone,)).fetchone()
-        if 1 != checkphone[0]:
-            return "输入的手机号：{}好像还未注册过。".format(mobilephone)
+    mobilephone = bottle.request.forms.get("mobilephone").strip()
+    if (len(mobilephone) != 11) or (not mobilephone.isdecimal()) or (mobilephone[0] != '1'):
+        return "输入的手机号：{}好像不正确，请重新输入。".format(mobilephone)
+    checkphone = db.execute("SELECT COUNT(*) FROM mobilephone_dict WHERE mobilephone = ?", (mobilephone,)).fetchone()
+    if 1 != checkphone[0]:
+        return "输入的手机号：{}好像还未注册过。".format(mobilephone)
 
+    password = bottle.request.forms.get("password").strip()
+    code = hashlib.md5()
+    code.update(password.encode())
+    value = code.hexdigest()
+
+    check = db.execute("SELECT password FROM mobilephone_dict WHERE mobilephone = ?", (mobilephone,)).fetchone()
+    if value != check[0]:
+        return "输入的手机号：{}好像与密码不匹配。".format(mobilephone)
+
+    if bottle.request.forms.get("save", "").strip():
         timestamp = bottle.request.forms.get("timestamp").strip()
         try:
             check = datetime.datetime.strptime(timestamp, "%Y-%m-%d").date()
