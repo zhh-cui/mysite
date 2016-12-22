@@ -45,7 +45,7 @@
 </tr>
 <tr>
     <td width="100">备注：</td>
-    <td colspan=4><textarea name="summary" type="text" value="" style="width:400px;height:100px;">交通$|住宿$|餐饮$|其他$(这里列出的关键字和标点符号不要改动，自行添加的内容也不要包含它们。)</textarea></td>
+    <td colspan=4><textarea name="summary" type="text" value="" style="width:400px;height:100px;">交通|$住宿|$餐饮|$其他|(这里列出的关键字不要改动，"|"符号后面添加对应项的内容，"$"符号表示对应项结束。自行添加的内容也不要包含它们，本括号的内容会自动删除。)</textarea></td>
 </tr>
 </table>
 <input name="save" value="提交" type="submit" />
