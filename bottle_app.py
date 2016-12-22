@@ -114,16 +114,39 @@ def do_hello(db):
             return "输入的手机号：{}好像与密码不匹配。".format(mobilephone)
 
         result = db.execute("SELECT * FROM workingdiary WHERE mobilephone = ? order by date(timestamp) desc", (mobilephone,))
-        return bottle.template("show_record", records = result)
+
+        with open(os.path.join(os.path.split(os.path.realpath(__file__))[0], "download", mobilephone + ".csv"), "wt") as csvfile:
+            csvfile.write("\"记录号\",\"日期\",\"项目名称\",\"任务名称\",\"耗费时间\",\"地点\",\"交通\",\"住宿\",\"餐饮\",\"其他\",\n")
+
+            for record in result:
+                for index, item in enumerate(record):
+                    if index == 1:
+                        pass
+                    elif index == 7:
+                        item = item.split("$")
+                        for subitem in item:
+                            subitem = subitem.strip().split("|")
+                            if len(subitem) == 2:
+                                csvfile.write("\"{}\",".format(subitem[1].strip()))
+                            else:
+                                csvfile.write("\"\",")
+                    else:
+                        csvfile.write("\"{}\",".format(item))
+
+                csvfile.write("\n")
+
+        result = db.execute("SELECT * FROM workingdiary WHERE mobilephone = ? order by date(timestamp) desc", (mobilephone,))
+
+        return bottle.template("show_record", records = result, filename = mobilephone + ".csv")
 
     elif bottle.request.forms.get("adduser", "").strip():
         mobilephone = bottle.request.forms.get("mobilephone").strip()
+        if (len(mobilephone) != 11) or (not mobilephone.isdecimal()) or (mobilephone[0] != '1'):
+            return "输入的手机号：{}好像不正确，请重新输入。".format(mobilephone)
+
         checkphone = db.execute("SELECT COUNT(*) FROM mobilephone_dict WHERE mobilephone = ?", (mobilephone,)).fetchone()
         if 1 == checkphone[0]:
             return "手机号：{}已经注册过。".format(mobilephone)
-
-        if (len(mobilephone) != 11) or (not mobilephone.isdecimal()) or (mobilephone[0] != '1'):
-            return "输入的手机号：{}好像不正确，请重新输入。".format(mobilephone)
 
         password = bottle.request.forms.get("password").strip()
         if len(password) < 4:
@@ -135,6 +158,10 @@ def do_hello(db):
 
         db.execute("INSERT INTO mobilephone_dict (mobilephone, password) VALUES (?, ?)", (mobilephone, value))
         return "手机号：{}注册成功。".format(mobilephone)
+
+@bottle.route('/download/<filename:path>')
+def download(filename):
+    return bottle.static_file(filename, os.path.join(os.path.split(os.path.realpath(__file__))[0], "download"))
 
 @bottle.route("/edit/<id:int>")
 def edit(id, db):
